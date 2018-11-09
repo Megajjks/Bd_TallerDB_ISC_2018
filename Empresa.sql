@@ -185,3 +185,134 @@ CREATE VIEW Empleados_Edad_Ventas AS SELECT Id, Nombre, Apellido, (YEAR(CURRENT_
 --7
 CREATE VIEW Empleado_Sumdepto AS SELECT Depto.Nombre, COUNT(*) AS Total_Empleados FROM Depto, Empleado WHERE Empleado.IdDepto=2 AND Depto.Id=2;
 
+--Transacciones
+--PASO 1: Ejemplo de concurrencia
+--Ventana 1 (root)
+BEGIN;
+INSERT INTO EMPLEADO VALUES ("TANOS","CROC", 8,"1980-02-08","CALLE 22A", 'M', 110,1,3);
+select * from empleado;
+--Ventana 2 (user Lety)
+select * from empleado;
+--Ventana 1 (root)
+COMMIT;
+--Ventana 2 (user Lety)
+select * from empleado;
+
+--PASO 2: Ejemplo de lecturas coherentes
+--Ventana 1 (root)
+BEGIN;
+SELECT MAX(ID) FROM EMPLEADO;
+select * from empleado;
+--Ventana 2 (user Lety)
+BEGIN;
+SELECT MAX(ID) FROM EMPLEADO;
+--Ventana 1 (root)
+INSERT INTO EMPLEADO VALUES ("TONY","VALDEZ", 9,"1985-03-12","CALLE 11", 'M', 120,1,3);
+COMMIT;
+--Ventana 2 (user Lety)
+INSERT INTO EMPLEADO VALUES ("ANTONIO","ROBLES", 9,"1982-11-12","CALLE 12", 'M', 120,1,3);
+--Ventana 2 (user Lety)
+COMMIT;
+
+--PASO 3: Lectura de bloqueos para actualizaciones
+--Ventana 1 (root)
+BEGIN;
+SELECT MAX(ID) FROM EMPLEADO FOR UPDATE;
+INSERT INTO EMPLEADO VALUES ("CAMILA","SUAREZ", 9,"1999-01-12","CALLE 45", 'F', 100,2,3);
+--Ventana 2 (user Lety)
+BEGIN;
+SELECT MAX(ID) FROM EMPLEADO FOR UPDATE;
+--Ventana 1 (root)
+COMMIT;
+--Ventana 2 (user Lety)
+INSERT INTO EMPLEADO VALUES ("RENATA","CASTRO", 10,"1979-03-06","CALLE 13",'F', 110,2,3);
+COMMIT;
+
+--PASO 4
+--Ventana 1 (root)
+BEGIN;
+INSERT INTO EMPLEADO VALUES ("YUYI","SUAREZ", 11,"1978-01-12","CALLE 45", 'F',100,2,3);
+UPDATE EMPLEADO SET NOMBRE = "YULI" WHERE ID =11;
+--Ventana 2 (user Lety)
+SELECT * FROM EMPLEADO;
+SELECT * FROM EMPLEADO LOCK IN SHARE MODE;
+--Ventana 1 (root)
+COMMIT;
+
+--PASO 5 
+--Ventana 1 (root)
+SELECT * FROM EMPLEADO;
+--Ventana 2 (user Lety)
+INSERT INTO EMPLEADO VALUES ("OBREGON","SUAREZ", 13,"1978-01-12","CALLE 45", 'F',100,2,3);
+SELECT * FROM EMPLEADO;
+--Ventana 1 (root)
+SET AUTOCOMMIT=0;
+--Ventana 2 (user Lety)
+SELECT * FROM EMPLEADO;
+--Ventana 1 (root)
+INSERT INTO EMPLEADO VALUES ("JEAN","SUAREZ", 16,"1978-01-12","CALLE 45", 'F',100,2,3);
+COMMIT;
+
+--Ventana 1 (root)
+SET AUTOCOMMIT=0;
+--Ventana 2 (user Lety)
+SET AUTOCOMMIT=0;
+--Ventana 1 (root)
+SELECT * FROM EMPLEADO;
+--Ventana 2 (user Lety)
+INSERT INTO EMPLEADO VALUES ("MANUEL","CAMACH0", 17,"1977-01-01","CALLE 11", 'M', 120,2,3);
+COMMIT;
+--Ventana 1 (root)
+SELECT * FROM EMPLEADO;
+--Ventana 1 (root)
+COMMIT;
+SELECT * FROM EMPLEADO;
+--Ventana 1 (root)
+SET AUTOCOMMIT=1;
+--Ventana 2 (user Lety)
+SET AUTOCOMMIT=1;
+
+--Practica 6: Bloqueo de tabla
+--Ventana 1 (root)
+LOCK TABLE EMPLEADO READ;
+--Ventana 2 (user Lety)
+SELECT * FROM EMPLEADO;
+INSERT INTO EMPLEADO VALUES ("ALONDRA","MINCE", 18,"1979-07-05","CALLE 11",'F', 110,2,3);
+--Ventana 1 (root)
+UNLOCK TABLES;
+
+--Ventana 1 (root)
+LOCK TABLE EMPLEADO READ, DEPTO WRITE;
+--Ventana 2 (user Lety)
+SELECT * FROM EMPLEADO;
+--Ventana 1 (root)
+INSERT INTO EMPLEADO VALUES ("ROSA","VERDE", 19,"1979-01-12","CALLE 45", 'F',130,1,3);
+
+--Ventana 1 (root)
+SELECT * FROM EMPLEADO;
+--Ventana 2 (user Lety)
+UNLOCK TABLES;
+--Ventana 1 (root)
+LOCK TABLE EMPLEADO WRITE;
+--Ventana 2 (user Lety)
+LOCK TABLE EMPLEADO READ;
+--Ventana 3 (user Lety)
+LOCK TABLE EMPLEADO READ;
+--Ventana 1 (root)
+UNLOCK TABLES;
+
+--Ventana 3 (user Lety)
+LOCK TABLE EMPLEADO WRITE;
+--Ventana 2 (user Lety)
+UNLOCK TABLES;
+
+--PASO 7 Transacciones con START TRANSACTION
+START TRANSACTION;
+SELECT @S:=(salario) FROM EMPLEADO WHERE ID='1';
+UPDATE EMPLEADO SET SALARIO=@S WHERE ID='2';
+COMMIT;
+
+START TRANSACTION;
+SELECT @S:=(salario) FROM EMPLEADO WHERE ID='1';
+UPDATE EMPLEADO SET SALARIO=@S+10 WHERE IDDEPTO='1';
+COMMIT;
