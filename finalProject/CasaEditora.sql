@@ -9,3 +9,12 @@ CREATE TABLE entrega(id_entrega INTEGER(10) NOT NULL, id_pub INTEGER(10), dni_re
 CREATE TABLE repartidor(dni_repartidor INTEGER(10) NOT NULL, nombre VARCHAR(50), domicilio VARCHAR(50), telefono VARCHAR(50), situacion VARCHAR(50)) ENGINE=INNODB;
 CREATE TABLE ruta(id_ruta INTEGER(10) NOT NULL, calleprincipal VARCHAR(20), callesecundario VARCHAR(20), localidad VARCHAR(20), entidad VARCHAR(20), numero VARCHAR(5), dni_repartidor INTEGER(10)) ENGINE=INNODB;
 CREATE TABLE incidencia(id_incidencia INTEGER(10) NOT NULL, ambito VARCHAR(50), descripcion TEXT, fecha_producida DATE, solucion TEXT, id_ruta INTEGER(10)) ENGINE=INNODB;
+--Asignamos las llaves primarias de las tablas
+ALTER TABLE editor ADD PRIMARY KEY (id_edit);
+ALTER TABLE publicacion ADD PRIMARY KEY (id_pub);
+ALTER TABLE recibe ADD PRIMARY KEY (id_rec);
+ALTER TABLE suscribtor ADD PRIMARY KEY (dni);
+ALTER TABLE entrega ADD PRIMARY KEY (id_entrega);
+ALTER TABLE repartidor ADD PRIMARY KEY (dni_repartidor);
+ALTER TABLE ruta ADD PRIMARY KEY (id_ruta);
+ALTER TABLE incidencia ADD PRIMARY KEY (id_incidencia);
