@@ -316,3 +316,25 @@ START TRANSACTION;
 SELECT @S:=(salario) FROM EMPLEADO WHERE ID='1';
 UPDATE EMPLEADO SET SALARIO=@S+10 WHERE IDDEPTO='1';
 COMMIT;
+
+--Creamos la tabla Bitacora
+CREATE TABLE BITACORA(CLAVE INTEGER(11) PRIMARY KEY AUTO_INCREMENT, USUARIO VARCHAR(20), EVENTO VARCHAR(30), ID VARCHAR(10));
+
+--Creación de Triggers
+--PASO 1: Disparador que inserta un registro en la tabla “Bitacora” cuando se realiza un nuevo empleado.
+CREATE TRIGGER TBit AFTER INSERT ON EMPLEADO FOR EACH ROW
+INSERT INTO BITACORA(USUARIO, EVENTO, ID) VALUES (current_user, 'Registro empleado', NEW.ID);
+--find del trigger
+INSERT INTO EMPLEADO VALUES ("BOOS", "LIGHT", 20,"1980-12-13", "CALLE 44","M",130,1,1);
+
+--PASO 2: Disparador que inserta un registro en la tabla “Bitacora” después de actualizar datos en la tabla empleado.
+CREATE TRIGGER ActEmp AFTER UPDATE ON EMPLEADO FOR EACH ROW
+INSERT INTO BITACORA (USUARIO, EVENTO, ID) VALUES (current_user, 'Actualiza empleado', new.id);
+
+UPDATE EMPLEADO SET NOMBRE='CLAR', APELLIDO='BELLA', DIR='CALLE 1' WHERE ID=20;
+
+--PASO 3: Disparador que inserta un registro en la tabla “Bitacora” después de dar de baja un empleado.
+CREATE TRIGGER BajaEmp AFTER DELETE ON EMPLEADO FOR EACH ROW
+INSERT INTO BITACORA (USUARIO, EVENTO, ID) VALUES (current_user, 'Baja empleado',OLD.ID);
+
+DELETE FROM EMPLEADO WHERE ID=20;
